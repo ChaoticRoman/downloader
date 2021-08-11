@@ -23,17 +23,15 @@ def get(url, timeout=2.0, retries=3, backoff_factor=0.5, stream=False):
     return http.get(url, timeout=timeout, stream=stream)
 
 
-def download_file(url, chunk_size=1024):
-    local_filename = url.split('/')[-1]
+def download(url, chunk_size=1024, destination_dir=None, filename=None):
+    target = filename if filename else url.split('/')[-1]
+    if destination_dir:
+        target = os.path.join(destination_dir, target)
     with get(url, stream=True) as r:
-        r.raise_for_status()
-        with open(local_filename, 'wb') as f:
+        with open(target, 'wb') as f:
             for chunk in r.iter_content(chunk_size=chunk_size):
-                # If you have chunk encoded response uncomment if
-                # and set chunk_size parameter to None.
-                #if chunk:
                 f.write(chunk)
-    return local_filename
+    return target
 
 
 if __name__ == "__main__":
@@ -43,6 +41,6 @@ if __name__ == "__main__":
     result = get(TEST_URL)
     print(result.status_code, result.content)
 
-    fn = download_file(TEST_URL)
+    fn = download(TEST_URL)
     import os
     os.system(f"ls {fn} && cat {fn} && rm {fn}")
